@@ -1,0 +1,31 @@
+{
+  "name": "appload/projects-hub-laravel",
+  "description": "Laravel connector for Projects Hub.",
+  "type": "library",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "Appload\\ProjectsHub\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.2",
+    "illuminate/support": "^12.0",
+    "illuminate/routing": "^12.0",
+    "illuminate/http": "^12.0",
+    "lightszentip/laravel-release-changelog-generator": "^0.4.1"
+  },
+  "require-dev": {
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Appload\\ProjectsHub\\ProjectsHubServiceProvider"
+      ]
+    }
+  },
+  "scripts": {
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
