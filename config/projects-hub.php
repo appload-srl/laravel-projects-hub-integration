@@ -30,7 +30,7 @@ return [
     */
     'openapi_docs_path' => env(
         'PROJECTS_HUB_OPENAPI_DOCS_PATH',
-        storage_path('api-docs/api-docs.json')
+        'storage/api-docs/api-docs.json'
     ),
 
     /*
