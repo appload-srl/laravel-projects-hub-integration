@@ -9,10 +9,44 @@ Laravel connector for Projects Hub.
 
 ## Installation
 
+This package is distributed from a private GitHub repository.
+
+Before requiring it, configure Composer so it can authenticate against GitHub and resolve the repository correctly.
+
+### 1. Configure a GitHub fine-grained token
+
+Create a GitHub fine-grained personal access token with access to the repository that hosts this package.
+
+The token should be granted at least:
+
+- repository access to `appload-srl/projects-hub-laravel`
+- read access to repository contents
+
+Then configure Composer globally:
+
+```bash
+composer config --global github-oauth.github.com YOUR_GITHUB_FINE_GRAINED_TOKEN
+```
+
+This lets Composer authenticate when downloading the package from the private GitHub repository.
+
+### 2. Configure the repository in Composer
+
+Add the VCS repository to the host project:
+
+```bash
+composer config repositories.projects-hub-laravel \
+'{"type":"vcs","url":"https://github.com/appload-srl/projects-hub-laravel.git","no-api":true}'
+```
+
+This command writes the custom repository definition into the project's `composer.json`, so Composer knows where to resolve `appload/projects-hub-laravel`.
+
+### 3. Require the package
+
 Install the package with Composer:
 
 ```bash
-composer require appload/projects-hub-laravel
+composer require appload/projects-hub-laravel:^0.1
 ```
 
 Then publish the package resources:
