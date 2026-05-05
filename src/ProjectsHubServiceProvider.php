@@ -2,6 +2,7 @@
 
 namespace Appload\ProjectsHub;
 
+use Appload\ProjectsHub\Console\Commands\ProjectsHubInstallCommand;
 use Appload\ProjectsHub\Console\Commands\OpenApiDiffCommand;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +25,7 @@ class ProjectsHubServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                ProjectsHubInstallCommand::class,
                 OpenApiDiffCommand::class,
             ]);
         }
