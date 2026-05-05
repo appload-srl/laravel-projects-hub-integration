@@ -17,7 +17,7 @@ class EnsureProjectsHubToken
         $expectedToken = config('projects-hub.route.auth.x-api-key');
 
         if (! $expectedToken) {
-            abort(403, 'Projects Hub token is not configured.');
+            abort(500, 'Projects Hub token is not configured.');
         }
 
         $providedToken = $request->header('X-Api-Key');
