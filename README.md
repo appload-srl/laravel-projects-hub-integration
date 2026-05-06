@@ -19,7 +19,7 @@ Create a GitHub fine-grained personal access token with access to the repository
 
 The token should be granted at least:
 
-- repository access to `appload-srl/projects-hub-laravel`
+- repository access to `appload-srl/laravel-projects-hub-integration`
 - read access to repository contents
 
 Then configure Composer globally:
@@ -35,18 +35,18 @@ This lets Composer authenticate when downloading the package from the private Gi
 Add the VCS repository to the host project:
 
 ```bash
-composer config repositories.projects-hub-laravel \
-'{"type":"vcs","url":"https://github.com/appload-srl/projects-hub-laravel.git","no-api":true}'
+composer config repositories.laravel-projects-hub-integration \
+'{"type":"vcs","url":"https://github.com/appload-srl/laravel-projects-hub-integration.git","no-api":true}'
 ```
 
-This command writes the custom repository definition into the project's `composer.json`, so Composer knows where to resolve `appload/projects-hub-laravel`.
+This command writes the custom repository definition into the project's `composer.json`, so Composer knows where to resolve `appload/laravel-projects-hub-integration`.
 
 ### 3. Require the package
 
 Install the package with Composer:
 
 ```bash
-composer require appload/projects-hub-laravel:^0.1
+composer require appload/laravel-projects-hub-integration:^0.1
 ```
 
 Then publish the package resources:

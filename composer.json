@@ -1,6 +1,6 @@
 {
-  "name": "appload/projects-hub-laravel",
-  "description": "Laravel connector for Projects Hub.",
+  "name": "appload/laravel-projects-hub-integration",
+  "description": "Laravel integration package for Projects Hub.",
   "type": "library",
   "license": "proprietary",
   "autoload": {
