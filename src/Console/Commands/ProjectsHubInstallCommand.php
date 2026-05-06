@@ -3,8 +3,6 @@
 namespace Appload\ProjectsHub\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-
 class ProjectsHubInstallCommand extends Command
 {
     protected $signature = 'projects-hub:install {--force : Overwrite already published files}';
@@ -25,7 +23,7 @@ class ProjectsHubInstallCommand extends Command
         $this->components->info('Publishing changelog generator files...');
 
         $this->callSilent('vendor:publish', [
-            '--provider' => 'Lightszentip\\LaravelReleaseChangelogGenerator\\ServiceProvider',
+            '--tag' => 'projects-hub-changelog-resources',
             '--force' => $force,
         ]);
 

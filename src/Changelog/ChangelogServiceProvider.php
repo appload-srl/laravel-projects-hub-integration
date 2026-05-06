@@ -20,10 +20,17 @@ use Appload\ProjectsHub\Changelog\Util\Constants;
 
 class ChangelogServiceProvider extends ServiceProvider
 {
+    private function packagePath(string $path = ''): string
+    {
+        $basePath = __DIR__;
+
+        return $path === '' ? $basePath : $basePath . '/' . ltrim($path, '/');
+    }
+
     #[\Override]
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/config.php', 'releasechangelog');
+        $this->mergeConfigFrom($this->packagePath('config/config.php'), 'releasechangelog');
 
         $this->app->singleton(Constants::APP_VERSION_HANDLING, static function () {
             return new VersionHandling();
@@ -35,7 +42,7 @@ class ChangelogServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'releasechangelog');
+        $this->loadViewsFrom($this->packagePath('resources/views'), 'releasechangelog');
         // Register the command if we are using the application via the CLI
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -51,11 +58,9 @@ class ChangelogServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                // Views
-                __DIR__ . '/../resources/.version/version.yml' => resource_path('.version/version.yml'),
-                __DIR__ . '/../resources/.changes/changelog.json' => resource_path('.changes/changelog.json'),
-                // __DIR__ . '/../resources/views/changelog-md.blade.php' => resource_path('views/changelog-md.blade.php'),
-            ], 'resources');
+                $this->packagePath('resources/.version/version.yml') => resource_path('.version/version.yml'),
+                $this->packagePath('resources/.changes/changelog.json') => resource_path('.changes/changelog.json'),
+            ], 'projects-hub-changelog-resources');
         }
 
         Blade::directive(
