@@ -29,7 +29,7 @@ This command writes the custom repository definition into the project's `compose
 Install the package with Composer:
 
 ```bash
-composer require appload/laravel-projects-hub-integration:^0.1
+composer require appload/laravel-projects-hub-integration
 ```
 
 Then publish the package resources:
