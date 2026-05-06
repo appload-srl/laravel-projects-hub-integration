@@ -6,11 +6,14 @@ use Appload\ProjectsHub\Console\Commands\ProjectsHubInstallCommand;
 use Appload\ProjectsHub\Console\Commands\OpenApiDiffCommand;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Appload\ProjectsHub\Changelog\ChangelogServiceProvider;
 
 class ProjectsHubServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->register(ChangelogServiceProvider::class);
+
         $this->mergeConfigFrom(
             __DIR__ . '/../config/projects-hub.php',
             'projects-hub'
