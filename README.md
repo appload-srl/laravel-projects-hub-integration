@@ -170,6 +170,109 @@ Notes:
 - `oasdiff` must be installed and available in `PATH`
 - when generation is enabled, the host app must expose the `l5-swagger:generate` Artisan command
 
+### Changelog commands
+
+The package publishes and registers the changelog resources used by the release commands:
+
+- `resources/.changes/changelog.json`
+- `resources/.version/version.yml`
+
+Add an unreleased changelog entry:
+
+```bash
+php artisan changelog:add --type=feat --message="Add customer export"
+```
+
+Optional metadata can be attached to an entry:
+
+```bash
+php artisan changelog:add \
+  --type=fix \
+  --module=billing \
+  --issue=123 \
+  --message="Fix invoice total rounding"
+```
+
+Inspect changelog entries:
+
+```bash
+php artisan changelog:show
+php artisan changelog:show --ver=1.2.3
+php artisan changelog:list
+```
+
+Check or update the current version:
+
+```bash
+php artisan changelog:show-version
+php artisan changelog:update-version --type=patch
+```
+
+Suggest the next release type from unreleased entries:
+
+```bash
+php artisan changelog:suggest-release
+```
+
+Create a release from the current unreleased entries:
+
+```bash
+php artisan changelog:release --type=minor --releasename="Customer exports"
+```
+
+Allowed release types are:
+
+- `patch`
+- `minor`
+- `major`
+- `rc`
+- `timestamp`
+
+If the version must be set explicitly instead of incremented, use:
+
+```bash
+php artisan changelog:set-release --versionnumber=1.4.0 --releasename="Customer exports"
+```
+
+Generate or refresh the root `CHANGELOG.md` file:
+
+```bash
+php artisan changelog:generate-md
+```
+
+All changelog commands also support JSON output:
+
+```bash
+php artisan changelog:suggest-release --json
+```
+
+### Release flow
+
+A typical release flow in a host project is:
+
+1. Add changelog entries during development with `changelog:add`.
+2. Before releasing, run `changelog:suggest-release`.
+3. Create the release changelog with `changelog:release --type=patch|minor|major --releasename="..."`.
+4. Generate `CHANGELOG.md` with `changelog:generate-md`.
+5. Commit the updated changelog and version files.
+6. Push the release commit.
+7. Create the Git tag and the GitHub Release from the GitHub interface.
+
+Example:
+
+```bash
+php artisan changelog:suggest-release
+php artisan changelog:release --type=minor --releasename="Customer exports"
+php artisan changelog:generate-md
+git add resources/.changes/changelog.json resources/.version/version.yml CHANGELOG.md
+git commit -m "Release v1.4.0"
+git push
+```
+
+After the commit is on GitHub, create a new release from the GitHub interface and use a tag matching the configured workflow pattern, for example `v1.4.0`.
+
+When the published GitHub Actions workflow runs on the tagged commit, it uploads the current OpenAPI spec with `versionTag` set to that tag, generates the OpenAPI diff against the previous matching tag, and attaches the diff to the GitHub Release.
+
 ## Typical setup
 
 1. Install the package with Composer.
