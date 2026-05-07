@@ -42,6 +42,7 @@ The install command publishes:
 
 - `config/projects-hub.php`
 - the changelog generator package resources required by this package
+- GitHub Actions workflow stubs under `.github/workflows`
 
 ## Configuration
 
@@ -120,6 +121,26 @@ Example:
 ```bash
 php artisan projects-hub:install --force
 ```
+
+After publishing, review the workflow stubs before committing them:
+
+- `on-sync-dev-api-diff.yml`
+- `on-sync-staging-api-diff.yml`
+- `on-sync-prod-api-diff.yml`
+- `openapi-diff-on-tag.yml`
+
+The reusable workflow is intentionally generic on:
+
+- OpenAPI spec path, overridable through the `PROJECTS_HUB_OPENAPI_DOCS_PATH` repository variable
+- Projects Hub upload path, overridable through the `PROJECTS_HUB_API_SPEC_PATH` repository variable
+- release tag matching, overridable through the `PROJECTS_HUB_VERSION_TAG_PATTERN` repository variable
+
+The branch names remain explicit defaults (`develop`, `staging`, `main`) because deployment flows differ across projects and should be adjusted in the host repository when needed.
+
+The GitHub Actions workflow expects these repository secrets:
+
+- `PROJECTS_HUB_API_URL`: Projects Hub base URL, without requiring the upload path
+- `PROJECTS_HUB_API_KEY`: API key sent as `X-Api-Key`
 
 ### OpenAPI diff command
 

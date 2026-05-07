@@ -1,0 +1,210 @@
+name: OpenAPI diff on tag # Release Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "The App Environment"
+        type: string
+        default: "development"
+      openapi_docs_path:
+        description: "Relative path of the OpenAPI spec inside the repository"
+        type: string
+        default: "storage/api-docs/api-docs.json"
+      projects_hub_api_path:
+        description: "Projects Hub API path used to upload the OpenAPI spec"
+        type: string
+        default: "/api-versioning/api-spec"
+      version_tag_pattern:
+        description: "Extended regex used to identify release tags"
+        type: string
+        default: "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+jobs:
+  openapi-diff:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # issues: write
+      # pull-requests: write
+
+    steps:
+      - name: Checkout full history and tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve current and previous tag
+        id: tags
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          TAG_PATTERN='${{ inputs.version_tag_pattern }}'
+          CURRENT_TAG=""
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" =~ $TAG_PATTERN ]]; then
+            CURRENT_TAG="${GITHUB_REF_NAME}"
+          else
+            mapfile -t HEAD_TAGS < <(git tag --points-at HEAD | grep -E "$TAG_PATTERN" | sort -V || true)
+
+            if [[ "${#HEAD_TAGS[@]}" -gt 0 ]]; then
+              CURRENT_TAG="${HEAD_TAGS[-1]}"
+            fi
+          fi
+
+          if [[ -n "$CURRENT_TAG" ]]; then
+            echo "Current tag: $CURRENT_TAG"
+          else
+            echo "Current commit has no matching release tag."
+          fi
+
+          mapfile -t TAGS < <(git tag | grep -E "$TAG_PATTERN" | sort -Vr || true)
+
+          PREVIOUS_TAG=""
+          if [[ -n "$CURRENT_TAG" ]]; then
+            found_current=false
+
+            for tag in "${TAGS[@]}"; do
+              if [[ "$tag" == "$CURRENT_TAG" ]]; then
+                found_current=true
+                continue
+              fi
+
+              if [[ "$found_current" == "true" ]]; then
+                PREVIOUS_TAG="$tag"
+                break
+              fi
+            done
+          elif [[ "${#TAGS[@]}" -gt 0 ]]; then
+            PREVIOUS_TAG="${TAGS[0]}"
+          fi
+
+          PREVIOUS_SPEC_EXISTS="false"
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            OPENAPI_PATH='${{ inputs.openapi_docs_path }}'
+
+            if git cat-file -e "${PREVIOUS_TAG}:${OPENAPI_PATH}" 2>/dev/null; then
+              PREVIOUS_SPEC_EXISTS="true"
+            fi
+          fi
+
+          SKIP_DIFF="false"
+          if [[ -z "$PREVIOUS_TAG" ]]; then
+            SKIP_DIFF="true"
+          fi
+
+          echo "current_tag=$CURRENT_TAG" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+          echo "previous_spec_exists=$PREVIOUS_SPEC_EXISTS" >> "$GITHUB_OUTPUT"
+          echo "skip_diff=$SKIP_DIFF" >> "$GITHUB_OUTPUT"
+
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "Previous tag: $PREVIOUS_TAG"
+          else
+            echo "No previous tag found: API diff will be skipped."
+          fi
+
+      - name: Upload current OpenAPI spec to Projects Hub
+        env:
+          PROJECTS_HUB_API_BASE_URL: ${{ secrets.PROJECTS_HUB_API_URL }}
+          PROJECTS_HUB_API_KEY: ${{ secrets.PROJECTS_HUB_API_KEY }}
+          PROJECTS_HUB_API_PATH: ${{ inputs.projects_hub_api_path }}
+          DOCS_PATH: ${{ inputs.openapi_docs_path }}
+          VERSION_TAG: ${{ steps.tags.outputs.current_tag }}
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          if [[ -z "$PROJECTS_HUB_API_BASE_URL" ]]; then
+            echo "PROJECTS_HUB_API_URL secret is required."
+            exit 1
+          fi
+
+          if [[ -z "$PROJECTS_HUB_API_KEY" ]]; then
+            echo "PROJECTS_HUB_API_KEY secret is required."
+            exit 1
+          fi
+
+          if [[ ! -f "$DOCS_PATH" ]]; then
+            echo "OpenAPI spec not found at: $DOCS_PATH"
+            exit 1
+          fi
+
+          PROJECTS_HUB_API_URL="${PROJECTS_HUB_API_BASE_URL%/}/${PROJECTS_HUB_API_PATH#/}"
+          VERSION_TAG_FORM=()
+
+          if [[ -n "$VERSION_TAG" ]]; then
+            VERSION_TAG_FORM=(--form "versionTag=$VERSION_TAG")
+          fi
+
+          curl --fail-with-body -X POST \
+              --url "$PROJECTS_HUB_API_URL" \
+              --header "X-Api-Key: $PROJECTS_HUB_API_KEY" \
+              --header "content-type: multipart/form-data" \
+              --form "file=@$DOCS_PATH" \
+              "${VERSION_TAG_FORM[@]}" \
+              --form commitHash=${{ github.sha }} \
+              --form repoId=${{ github.repository_id }} \
+              --form repoName=${{ github.event.repository.name }} \
+              --form environment=${{ inputs.environment }}
+
+      - name: No previous tag info
+        if: steps.tags.outputs.skip_diff == 'true'
+        run: |
+          echo "No previous tag found: no API diff generated."
+          exit 0
+
+      - name: Debug outputs
+        run: |
+          echo "current_tag = ${{ steps.tags.outputs.current_tag }}"
+          echo "previous_tag = ${{ steps.tags.outputs.previous_tag }}"
+          echo "previous_spec_exists = ${{ steps.tags.outputs.previous_spec_exists }}"
+
+      - name: Extract previous OpenAPI spec
+        if: steps.tags.outputs.skip_diff != 'true' && steps.tags.outputs.previous_spec_exists == 'true'
+        run: |
+          git show "${{ steps.tags.outputs.previous_tag }}:${{ inputs.openapi_docs_path }}" > old-openapi.json
+
+      - name: Create placeholder diff for legacy tag
+        if: steps.tags.outputs.skip_diff != 'true' && steps.tags.outputs.previous_spec_exists == 'false'
+        run: |
+          cat > api-diff.md <<EOF
+          # API diff
+
+          Nessun diff disponibile: nel tag precedente non era presente \`${{ inputs.openapi_docs_path }}\`.
+          EOF
+
+      - name: Prepare current OpenAPI spec
+        if: steps.tags.outputs.skip_diff != 'true'
+        run: |
+          cp "${{ inputs.openapi_docs_path }}" new-openapi.json
+
+      - name: Run oasdiff changelog
+        if: steps.tags.outputs.skip_diff != 'true' && steps.tags.outputs.previous_spec_exists == 'true'
+        uses: oasdiff/oasdiff-action/changelog@v0.0.37
+        with:
+          base: old-openapi.json
+          revision: new-openapi.json
+          format: markdown
+          output-to-file: api-diff.md
+
+      - name: Refine Api-Diff output
+        if: steps.tags.outputs.skip_diff != 'true' && steps.tags.outputs.current_tag != ''
+        run: |
+          sed -i "1s|^# API Changelog .*|# API Changelog ${{ steps.tags.outputs.previous_tag }} vs. ${{ steps.tags.outputs.current_tag }}|" api-diff.md
+
+      - name: Publish GitHub Release with notes and asset
+        uses: softprops/action-gh-release@v3
+        if: steps.tags.outputs.skip_diff != 'true' && github.ref_type == 'tag'
+        with:
+          body_path: api-diff.md
+          files: api-diff.md
+          fail_on_unmatched_files: true
+
+      - name: Upload API Diff as artifact
+        if: steps.tags.outputs.skip_diff != 'true' && github.ref_type != 'tag' && github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-diff-${{ steps.tags.outputs.current_tag || github.ref_name }}
+          path: api-diff.md

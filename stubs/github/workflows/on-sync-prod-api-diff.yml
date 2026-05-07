@@ -1,0 +1,19 @@
+name: OpenAPI Diff to Production
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*" # Attiva anche sui tag, come v1.0.0
+
+jobs:
+  openapi-diff:
+    name: Generate OpenAPI Diff
+    uses: ./.github/workflows/openapi-diff-on-tag.yml
+    with:
+      environment: production
+      openapi_docs_path: ${{ vars.PROJECTS_HUB_OPENAPI_DOCS_PATH || 'storage/api-docs/api-docs.json' }}
+      projects_hub_api_path: ${{ vars.PROJECTS_HUB_API_SPEC_PATH || '/api-versioning/api-spec' }}
+      version_tag_pattern: ${{ vars.PROJECTS_HUB_VERSION_TAG_PATTERN || '^v[0-9]+\\.[0-9]+\\.[0-9]+$' }}
+    secrets: inherit

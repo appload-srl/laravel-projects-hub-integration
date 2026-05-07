@@ -27,6 +27,13 @@ class ProjectsHubInstallCommand extends Command
             '--force' => $force,
         ]);
 
+        $this->components->info('Publishing GitHub Actions workflow stubs...');
+
+        $this->callSilent('vendor:publish', [
+            '--tag' => 'projects-hub-github-workflows',
+            '--force' => $force,
+        ]);
+
         $this->components->success('Projects Hub installed successfully.');
 
         return self::SUCCESS;

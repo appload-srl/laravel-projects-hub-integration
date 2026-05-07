@@ -26,6 +26,13 @@ class ProjectsHubServiceProvider extends ServiceProvider
             __DIR__ . '/../config/projects-hub.php' => config_path('projects-hub.php'),
         ], 'projects-hub-config');
 
+        $this->publishes([
+            __DIR__ . '/../stubs/github/workflows/openapi-diff-on-tag.yml' => base_path('.github/workflows/openapi-diff-on-tag.yml'),
+            __DIR__ . '/../stubs/github/workflows/on-sync-dev-api-diff.yml' => base_path('.github/workflows/on-sync-dev-api-diff.yml'),
+            __DIR__ . '/../stubs/github/workflows/on-sync-staging-api-diff.yml' => base_path('.github/workflows/on-sync-staging-api-diff.yml'),
+            __DIR__ . '/../stubs/github/workflows/on-sync-prod-api-diff.yml' => base_path('.github/workflows/on-sync-prod-api-diff.yml'),
+        ], 'projects-hub-github-workflows');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ProjectsHubInstallCommand::class,
