@@ -42,7 +42,6 @@ class ChangelogServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom($this->packagePath('resources/views'), 'releasechangelog');
         // Register the command if we are using the application via the CLI
         if ($this->app->runningInConsole()) {
             $this->commands([
