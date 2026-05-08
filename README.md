@@ -56,25 +56,39 @@ config/projects-hub.php
 
 ### Environment variables
 
-Add these values to your `.env` as needed:
+The package works with sensible defaults. Add these values to your `.env` only when you need to override the defaults:
 
 ```dotenv
+# Default: true
 PROJECTS_HUB_ENABLED=true
+
+# Default: api/projects-hub
 PROJECTS_HUB_ROUTE_PREFIX=api/projects-hub
 
+# Default: false
 PROJECTS_HUB_AUTH_ENABLED=false
+
+# No default. Required only when PROJECTS_HUB_AUTH_ENABLED=true.
 PROJECTS_HUB_AUTH_X_API_KEY=
 
+# Default: storage/api-docs/api-docs.json
 PROJECTS_HUB_OPENAPI_DOCS_PATH=storage/api-docs/api-docs.json
 ```
 
 ### Config reference
 
-- `PROJECTS_HUB_ENABLED`: enables or disables the package routes entirely.
-- `PROJECTS_HUB_ROUTE_PREFIX`: route prefix used for the package endpoints.
-- `PROJECTS_HUB_AUTH_ENABLED`: enables `X-API-Key` protection for the package endpoints.
-- `PROJECTS_HUB_AUTH_X_API_KEY`: expected API key when auth is enabled.
-- `PROJECTS_HUB_OPENAPI_DOCS_PATH`: path to the generated OpenAPI JSON file in the host application.
+- `PROJECTS_HUB_ENABLED`: enables or disables the package routes entirely. Defaults to `true`.
+- `PROJECTS_HUB_ROUTE_PREFIX`: route prefix used for the package endpoints. Defaults to `api/projects-hub`.
+- `PROJECTS_HUB_AUTH_ENABLED`: enables `X-API-Key` protection for the package endpoints. Defaults to `false`.
+- `PROJECTS_HUB_AUTH_X_API_KEY`: expected API key when auth is enabled. It has no default and is required only when `PROJECTS_HUB_AUTH_ENABLED=true`.
+- `PROJECTS_HUB_OPENAPI_DOCS_PATH`: path to the generated OpenAPI JSON file in the host application. Defaults to `storage/api-docs/api-docs.json`.
+
+### GitHub Actions secrets
+
+The published GitHub Actions workflows require these repository secrets to be configured and injected into CI/CD:
+
+- `PROJECTS_HUB_API_URL`: Projects Hub base URL, without requiring the upload path
+- `PROJECTS_HUB_API_KEY`: API key sent as `X-Api-Key`
 
 ## Exposed endpoint
 
@@ -136,11 +150,6 @@ The reusable workflow is intentionally generic on:
 - release tag matching, overridable through the `PROJECTS_HUB_VERSION_TAG_PATTERN` repository variable
 
 The branch names remain explicit defaults (`develop`, `staging`, `main`) because deployment flows differ across projects and should be adjusted in the host repository when needed.
-
-The GitHub Actions workflow expects these repository secrets:
-
-- `PROJECTS_HUB_API_URL`: Projects Hub base URL, without requiring the upload path
-- `PROJECTS_HUB_API_KEY`: API key sent as `X-Api-Key`
 
 ### OpenAPI diff command
 
