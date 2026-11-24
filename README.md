@@ -4,8 +4,8 @@ Laravel connector for Projects Hub.
 
 ## Requirements
 
-- PHP 8.2+
-- Laravel 12
+- PHP 8.3+
+- Laravel 12 or 13
 
 ## Installation
 
